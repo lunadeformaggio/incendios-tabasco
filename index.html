@@ -188,6 +188,7 @@ require([
   const instalaciones = new GeoJSONLayer({
     url: "./data/Instalaciones_petroleras.geojson",
     title: "Instalaciones petroleras de PEMEX",
+    minScale: 500000,
     renderer: {
       type: "simple",
       symbol: {
