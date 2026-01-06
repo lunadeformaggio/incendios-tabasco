@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Incendios Tabasco</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html, body, #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #timeControls {
+  position: absolute;
+  bottom: 190px;
+  left: 15px;
+  z-index: 99;
+}
+
+#modeControls {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 99;
+}
+
+#modeControls button {
+  padding: 6px 10px;
+  margin-bottom: 5px;
+  display: block;
+  border: none;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+
+#timeControls button {
+  padding: 6px 10px;
+  margin-right: 5px;
+  border: none;
+  border-radius: 4px;
+  background: #f5f5f5;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#timeControls button:hover {
+  background: #ddd;
+}
+
+    #legendDiv {
+  position: absolute;
+  bottom: 100px;
+  right: 15px;
+  z-index: 99;
+  background: white;
+  padding: 10px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  max-width: 240px;
+}
+
+    #timeSliderDiv {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+  height: 80px;
+  z-index: 99;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+  </style>
+</head>
+
+<body>
+
+<div id="viewDiv"></div>
+<div id="timeControls">
+  <button id="dailyBtn">Diario</button>
+  <button id="monthlyBtn">Mensual</button>
+</div>
+<div id="modeControls">
+  <button id="dayModeBtn">🌞 Incendios de día</button>
+  <button id="nightModeBtn">🌙 Incendios de noche</button>
+  <button id="allModeBtn">🔄 Todos los incendios</button>
+</div>
+<div id="timeSliderDiv"></div>
+<div id="legendDiv"></div>
+
+<script>
+require([
+  "esri/config",
+  "esri/Map",
+  "esri/views/MapView",
+  "esri/layers/GeoJSONLayer",
+  "esri/widgets/Legend",
+  "esri/widgets/LayerList",
+  "esri/widgets/TimeSlider"
+], function(
+  esriConfig,
+  Map,
+  MapView, 
+  GeoJSONLayer,
+  Legend,     
+  LayerList, 
+  TimeSlider
+) {
+
+
+    // 🔑 AQUÍ VA LA API KEY (PRIMERAS LÍNEAS)
+    esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
+
+
+  const limite = new GeoJSONLayer({
+    url: "./data/Limite_Tabasco.geojson",
+    title: "Límite estatal",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-fill",
+        color: [0,0,0,0],
+        outline: { color: "#555", width: 1.5 }
+      }
+    }
+  });
+
+  const incendiosDia = new GeoJSONLayer({
+    url: "./data/Incendios_Vegetacion_Dia.geojson",
+    title: "Incendios en vegetación (día)",
+    timeInfo: {
+      startField: "ACQ_DATE"
+    },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#ff7043",
+        size: "5px"
+      }
+    }
+  });
+
+  const incendiosNoche = new GeoJSONLayer({
+    url: "./data/Incendios_Vegetacion_Noche.geojson",
+    title: "Incendios en vegetación (noche)",
+    timeInfo: {
+      startField: "ACQ_DATE"
+    },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#ab47bc",
+        size: "5px"
+      }
+    }
+  });
+
+  const mecheros = new GeoJSONLayer({
+    url: "./data/Fuentes_Fijas_SUOMI.geojson",
+    title: "Fuentes fijas (mecheros)",
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#1e88e5",
+        size: "6px"
+      }
+    }
+  });
+
+  const pozos = new GeoJSONLayer({
+    url: "./data/Pozos_PEMEX.geojson",
+    title: "Pozos petroleros PEMEX",
+    minScale: 500000,
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "simple-marker",
+        color: "#000000",
+        size: "4px"
+      }
+    }
+  });
+
+  const map = new Map({
+    basemap: "streets",
+    layers: [
+      limite,
+      incendiosDia,
+      incendiosNoche,
+      mecheros,
+      pozos
+    ]
+  });
+
+  const view = new MapView({
+    container: "viewDiv",
+    map: map,
+    center: [-92.9, 18.0],
+    zoom: 8
+  });
+
+
+  const legend = new Legend({
+    view: view,
+    container: "legendDiv"
+  });
+
+  const layerList = new LayerList({
+    view: view
+  });
+  view.ui.add(layerList, "top-right");
+
+
+  function setDayMode() {
+  incendiosDia.visible = true;
+  incendiosNoche.visible = false;
+
+  map.basemap = "topo-vector";
+}
+
+function setNightMode() {
+  incendiosDia.visible = false;
+  incendiosNoche.visible = true;
+
+  map.basemap = "dark-gray-vector";
+}
+
+function setAllMode() {
+  incendiosDia.visible = true;
+  incendiosNoche.visible = true;
+
+  map.basemap = "gray-vector";
+}
+
+document.getElementById("dayModeBtn").onclick = setDayMode;
+document.getElementById("nightModeBtn").onclick = setNightMode;
+document.getElementById("allModeBtn").onclick = setAllMode;
+
+
+setDayMode();
+
+
+  const timeSlider = new TimeSlider({
+    container: "timeSliderDiv",
+    view: view,
+    mode: "time-window",
+    fullTimeExtent: {
+      start: new Date(2025, 0, 1),
+      end: new Date(2025, 11, 31)
+  }
+  });
+
+  
+
+    function setDailyMode() {
+    timeSlider.stops = {
+    interval: {
+      value: 1,
+      unit: "days"
+    }
+  };
+  timeSlider.playRate = 300;
+}
+
+function setMonthlyMode() {
+  timeSlider.stops = {
+    interval: {
+      value: 1,
+      unit: "months"
+    }
+  };
+  timeSlider.playRate = 800;
+}
+
+document.getElementById("dailyBtn").onclick = setDailyMode;
+document.getElementById("monthlyBtn").onclick = setMonthlyMode;
+
+setDailyMode();
+
+
+  });
+
+
+</script>
+
+</body>
+</html>
