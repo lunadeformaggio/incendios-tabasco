@@ -185,7 +185,7 @@ require([
     }
   });
 
-  const isntalaciones = new GeoJSONLayer({
+  const instalaciones = new GeoJSONLayer({
     url: "./data/Instalaciones_petroleras.geojson",
     title: "Instalaciones petroleras de PEMEX",
     renderer: {
@@ -193,8 +193,8 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/instalaciones.svg",
-        widht: "16px",
-        height: "16px"
+        widht: 16,
+        height: 16
         }
     }
   });
@@ -209,8 +209,8 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/pozo.svg",
-        widht: "16px",
-        height: "16px"
+        widht: 16,
+        height: 16
       }
     }
   });
