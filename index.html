@@ -2,9 +2,11 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Incendios Tabasco</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
+  <script src="config.js"></script> 
   <script src="https://js.arcgis.com/4.29/"></script>
 
   <style>
@@ -17,86 +19,231 @@
     }
 
     #timeControls {
-  position: absolute;
-  bottom: 190px;
-  left: 15px;
-  z-index: 99;
-}
+      position: absolute;
+      bottom: 105px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 99;
+      display: flex;
+      gap: 10px;
+      background: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
 
-#modeControls {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  z-index: 99;
-}
+    #modeControls {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 99;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
 
-#modeControls button {
-  padding: 6px 10px;
-  margin-bottom: 5px;
-  display: block;
-  border: none;
-  border-radius: 4px;
-  background: #f5f5f5;
-  cursor: pointer;
-  font-size: 13px;
-}
+    .control-btn {
+      padding: 8px 12px;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      font-weight: 500;
+    }
 
+    .control-btn:hover {
+      background: #f0f0f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
 
-#timeControls button {
-  padding: 6px 10px;
-  margin-right: 5px;
-  border: none;
-  border-radius: 4px;
-  background: #f5f5f5;
-  cursor: pointer;
-  font-size: 13px;
-}
+    .control-btn:active {
+      transform: translateY(0);
+    }
 
-#timeControls button:hover {
-  background: #ddd;
-}
+    .control-btn.active {
+      background: #0079c1;
+      color: white;
+      border-color: #005a87;
+    }
 
-    #legendDiv {
-  position: absolute;
-  bottom: 100px;
-  right: 15px;
-  z-index: 99;
-  background: white;
-  padding: 10px;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  max-width: 240px;
-}
+    #legendLayerContainer {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      z-index: 99;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 300px;
+    }
+
+    #legendDiv, #layerListDiv {
+      background: white;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
 
     #timeSliderDiv {
-  position: absolute;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 40px);
-  height: 80px;
-  z-index: 99;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-}
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 40px);
+      max-width: 800px;
+      height: 80px;
+      z-index: 99;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    #loadingDiv {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      background: white;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
+    }
+
+    #loadingDiv.show {
+      display: block;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #0079c1;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #errorDiv {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: #ffebee;
+      color: #c62828;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      display: none;
+      max-width: 80%;
+      border-left: 4px solid #c62828;
+    }
+
+    #errorDiv.show {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      #timeControls {
+        bottom: 110px;
+        padding: 6px 10px;
+        gap: 5px;
+      }
+
+      #modeControls {
+        left: 10px;
+        top: 10px;
+      }
+
+      .control-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+
+      #legendLayerContainer {
+        bottom: auto;
+        top: 10px;
+        right: 10px;
+        max-width: 200px;
+        font-size: 12px;
+      }
+
+      #timeSliderDiv {
+        width: calc(100% - 20px);
+        height: 60px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      #modeControls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-width: calc(100% - 20px);
+      }
+
+      .control-btn {
+        flex: 1 1 auto;
+        min-width: 100px;
+      }
+
+      #timeControls {
+        width: auto;
+        max-width: calc(100% - 20px);
+      }
+    }
   </style>
 </head>
 
 <body>
 
 <div id="viewDiv"></div>
+
+<div id="loadingDiv">
+  <div class="spinner"></div>
+  <div>Cargando datos...</div>
+</div>
+
+<div id="errorDiv"></div>
+
 <div id="timeControls">
-  <button id="dailyBtn">Diario</button>
-  <button id="monthlyBtn">Mensual</button>
+  <button id="dailyBtn" class="control-btn active" aria-label="Cambiar a vista diaria" title="Intervalo diario">
+    📅 Diario
+  </button>
+  <button id="monthlyBtn" class="control-btn" aria-label="Cambiar a vista mensual" title="Intervalo mensual">
+    📆 Mensual
+  </button>
 </div>
+
 <div id="modeControls">
-  <button id="dayModeBtn">🌞 Incendios de día</button>
-  <button id="nightModeBtn">🌙 Incendios de noche</button>
-  <button id="allModeBtn">🔄 Todos los incendios</button>
+  <button id="dayModeBtn" class="control-btn" aria-label="Mostrar solo incendios diurnos" title="Incendios detectados durante el día">
+    🌞 Incendios de día
+  </button>
+  <button id="nightModeBtn" class="control-btn" aria-label="Mostrar solo incendios nocturnos" title="Incendios detectados durante la noche">
+    🌙 Incendios de noche
+  </button>
+  <button id="allModeBtn" class="control-btn active" aria-label="Mostrar todos los incendios" title="Todos los incendios">
+    🔄 Todos los incendios
+  </button>
 </div>
+
 <div id="timeSliderDiv"></div>
-<div id="legendDiv"></div>
+
+<div id="legendLayerContainer">
+  <div id="layerListDiv"></div>
+  <div id="legendDiv"></div>
+</div>
 
 <script>
 require([
@@ -117,11 +264,35 @@ require([
   TimeSlider
 ) {
 
+  // 🔑 IMPORTANTE: Esta API key debe moverse a un archivo config.js no trackeado en Git
+  // Crea un archivo config.js con: const CONFIG = { API_KEY: "tu_key_aqui" };
+  // Y añade config.js a tu .gitignore
+ const API_KEY = CONFIG.API_KEY;
+  esriConfig.apiKey = API_KEY;
 
-    // 🔑 API
-    esriConfig.apiKey = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
+  // Elementos del DOM
+  const loadingDiv = document.getElementById("loadingDiv");
+  const errorDiv = document.getElementById("errorDiv");
 
+  // Funciones de utilidad
+  function showLoading(show) {
+    loadingDiv.classList.toggle("show", show);
+  }
 
+  function showError(message) {
+    errorDiv.textContent = message;
+    errorDiv.classList.add("show");
+    setTimeout(() => errorDiv.classList.remove("show"), 5000);
+  }
+
+  function handleLayerError(error, layerName) {
+    console.error(`Error cargando ${layerName}:`, error);
+    showError(`No se pudo cargar: ${layerName}`);
+  }
+
+  showLoading(true);
+
+  // Definición de capas con manejo de errores
   const limite = new GeoJSONLayer({
     url: "./data/Limite_Tabasco.geojson",
     title: "Límite estatal",
@@ -130,7 +301,7 @@ require([
       symbol: {
         type: "simple-fill",
         color: [0,0,0,0],
-        outline: { color: "#555", width: 1.5 }
+        outline: { color: "black", width: 2 }
       }
     }
   });
@@ -146,8 +317,31 @@ require([
       symbol: {
         type: "simple-marker",
         color: "#ff7043",
-        size: "5px"
+        size: "4px"
       }
+    },
+    featureReduction: {
+      type: "cluster",
+      clusterRadius: "50px",
+      clusterMinSize: "16px",
+      clusterMaxSize: "32px",
+      symbol: {
+        type: "simple-marker",
+        color: "#ff7043",
+        outline: null
+      },
+      labelingInfo: [{
+        deconflictionStrategy: "none",
+        labelExpressionInfo: {
+          expression: "Text($feature.cluster_count, '#,###')"
+        },
+        symbol: {
+          type: "text",
+          color: "white",
+          font: { size: 10, weight: "bold" }
+        },
+        labelPlacement: "center-center"
+      }]
     }
   });
 
@@ -161,9 +355,32 @@ require([
       type: "simple",
       symbol: {
         type: "simple-marker",
-        color: "#ab47bc",
-        size: "5px"
+        color: "#070A91",
+        size: "4px"
       }
+    },
+    featureReduction: {
+      type: "cluster",
+      clusterRadius: "50px",
+      clusterMinSize: "16px",
+      clusterMaxSize: "32px",
+      symbol: {
+        type: "simple-marker",
+        color: "#2196F3",
+        outline: null
+      },
+      labelingInfo: [{
+        deconflictionStrategy: "none",
+        labelExpressionInfo: {
+          expression: "Text($feature.cluster_count, '#,###')"
+        },
+        symbol: {
+          type: "text",
+          color: "white",
+          font: { size: 10, weight: "bold" }
+        },
+        labelPlacement: "center-center"
+      }]
     }
   });
 
@@ -194,12 +411,11 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/instalaciones.svg",
-        widht: 16,
+        width: 16,
         height: 16
-        }
+      }
     }
   });
-
 
   const pozos = new GeoJSONLayer({
     url: "./data/Pozos_PEMEX.geojson",
@@ -210,22 +426,32 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/pozo.svg",
-        widht: 16,
+        width: 16,
         height: 16
       }
     }
   });
 
+  // Manejo de errores de carga para cada capa
+  const layers = [
+    { layer: limite, name: "Límite estatal" },
+    { layer: instalaciones, name: "Instalaciones petroleras" },
+    { layer: pozos, name: "Pozos petroleros" },
+    { layer: mecheros, name: "Fuentes fijas" },
+    { layer: incendiosNoche, name: "Incendios nocturnos" },
+    { layer: incendiosDia, name: "Incendios diurnos" }
+  ];
+
+  layers.forEach(({ layer, name }) => {
+    layer.when(
+      () => console.log(`✓ ${name} cargado correctamente`),
+      (error) => handleLayerError(error, name)
+    );
+  });
+
   const map = new Map({
-    basemap: "streets",
-    layers: [
-      limite,
-      instalaciones,
-      pozos,
-      mecheros,
-      incendiosNoche,
-      incendiosDia
-    ]
+    basemap: "satellite",
+    layers: layers.map(l => l.layer)
   });
 
   const view = new MapView({
@@ -235,6 +461,13 @@ require([
     zoom: 9
   });
 
+  view.when(() => {
+    showLoading(false);
+  }, (error) => {
+    showLoading(false);
+    showError("Error al inicializar el mapa");
+    console.error("Error del mapa:", error);
+  });
 
   const legend = new Legend({
     view: view,
@@ -242,40 +475,50 @@ require([
   });
 
   const layerList = new LayerList({
-    view: view
+    view: view,
+    container: "layerListDiv"
   });
-  view.ui.add(layerList, "top-right");
 
+  // Control de modos de visualización
+  let currentMode = 'all';
+  
+  function setActiveButton(buttonGroup, activeButton) {
+    const buttons = document.querySelectorAll(`#${buttonGroup} .control-btn`);
+    buttons.forEach(btn => btn.classList.remove('active'));
+    activeButton.classList.add('active');
+  }
 
   function setDayMode() {
-  incendiosDia.visible = true;
-  incendiosNoche.visible = false;
+    incendiosDia.visible = true;
+    incendiosNoche.visible = false;
+    map.basemap = "topo-vector";
+    currentMode = 'day';
+    setActiveButton('modeControls', document.getElementById('dayModeBtn'));
+  }
 
-  map.basemap = "topo-vector";
-}
+  function setNightMode() {
+    incendiosDia.visible = false;
+    incendiosNoche.visible = true;
+    map.basemap = "dark-gray-vector";
+    currentMode = 'night';
+    setActiveButton('modeControls', document.getElementById('nightModeBtn'));
+  }
 
-function setNightMode() {
-  incendiosDia.visible = false;
-  incendiosNoche.visible = true;
+  function setAllMode() {
+    incendiosDia.visible = true;
+    incendiosNoche.visible = true;
+    map.basemap = "satellite";
+    currentMode = 'all';
+    setActiveButton('modeControls', document.getElementById('allModeBtn'));
+  }
 
-  map.basemap = "dark-gray-vector";
-}
+  document.getElementById("dayModeBtn").onclick = setDayMode;
+  document.getElementById("nightModeBtn").onclick = setNightMode;
+  document.getElementById("allModeBtn").onclick = setAllMode;
 
-function setAllMode() {
-  incendiosDia.visible = true;
-  incendiosNoche.visible = true;
+  setAllMode();
 
-  map.basemap = "gray-vector";
-}
-
-document.getElementById("dayModeBtn").onclick = setDayMode;
-document.getElementById("nightModeBtn").onclick = setNightMode;
-document.getElementById("allModeBtn").onclick = setAllMode;
-
-
-setAllMode();
-
-
+  // TimeSlider
   const timeSlider = new TimeSlider({
     container: "timeSliderDiv",
     view: view,
@@ -283,40 +526,64 @@ setAllMode();
     fullTimeExtent: {
       start: new Date(2025, 0, 1),
       end: new Date(2025, 11, 31)
-  }
+    },
+    timeExtent: {
+      start: new Date(2025, 0, 1),
+      end: new Date(2025, 11, 31)
+    }
   });
 
-  
-
-    function setDailyMode() {
+  // Control de intervalos de tiempo
+  function setDailyMode() {
     timeSlider.stops = {
-    interval: {
-      value: 1,
-      unit: "days"
+      interval: {
+        value: 1,
+        unit: "days"
+      }
+    };
+    timeSlider.playRate = 300;
+    setActiveButton('timeControls', document.getElementById('dailyBtn'));
+  }
+
+  function setMonthlyMode() {
+    timeSlider.stops = {
+      interval: {
+        value: 1,
+        unit: "months"
+      }
+    };
+    timeSlider.playRate = 800;
+    setActiveButton('timeControls', document.getElementById('monthlyBtn'));
+  }
+
+  document.getElementById("dailyBtn").onclick = setDailyMode;
+  document.getElementById("monthlyBtn").onclick = setMonthlyMode;
+
+  setDailyMode();
+
+  // Atajos de teclado para accesibilidad
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey) {
+      switch(e.key) {
+        case '1':
+          setDayMode();
+          break;
+        case '2':
+          setNightMode();
+          break;
+        case '3':
+          setAllMode();
+          break;
+        case 'd':
+          setDailyMode();
+          break;
+        case 'm':
+          setMonthlyMode();
+          break;
+      }
     }
-  };
-  timeSlider.playRate = 300;
-}
-
-function setMonthlyMode() {
-  timeSlider.stops = {
-    interval: {
-      value: 1,
-      unit: "months"
-    }
-  };
-  timeSlider.playRate = 800;
-}
-
-document.getElementById("dailyBtn").onclick = setDailyMode;
-document.getElementById("monthlyBtn").onclick = setMonthlyMode;
-
-setDailyMode();
-
-
   });
-
-
+});
 </script>
 
 </body>
