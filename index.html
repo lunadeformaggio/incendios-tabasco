@@ -25,10 +25,10 @@
       z-index: 99;
       display: flex;
       gap: 10px;
-      background: white;
+      background: rgb(80, 80, 80);
       padding: 8px 12px;
       border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
     }
 
     #modeControls {
@@ -45,18 +45,19 @@
       padding: 8px 12px;
       border: 2px solid transparent;
       border-radius: 6px;
-      background: white;
+      background: rgb(80, 80, 80);
+      color: white;
       cursor: pointer;
       font-size: 14px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
       font-weight: 500;
     }
 
     .control-btn:hover {
-      background: #f0f0f0;
+      background: rgb(100, 100, 100);
       transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     }
 
     .control-btn:active {
@@ -64,37 +65,72 @@
     }
 
     .control-btn.active {
-      background: #0079c1;
+      background: #2196F3;
       color: white;
-      border-color: #005a87;
+      border-color: #1976D2;
     }
 
-    #legendLayerContainer {
+    #layerListContainer {
       position: absolute;
       top: 15px;
       right: 15px;
       z-index: 99;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
       max-width: 220px;
     }
 
-    #legendDiv, #layerListDiv {
-      background: white;
+    #layerListDiv {
+      background: rgb(80, 80, 80);
       padding: 8px;
       border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
       font-size: 12px;
     }
 
-    #legendDiv .esri-legend__service,
-    #layerListDiv .esri-layer-list {
+    /* Personalizar el LayerList de Esri - FORZAR estilos */
+    #layerListDiv .esri-layer-list,
+    #layerListDiv .esri-layer-list__list,
+    #layerListDiv .esri-layer-list__item,
+    #layerListDiv .esri-layer-list__item-container,
+    #layerListDiv .esri-layer-list__child-toggle,
+    #layerListDiv .esri-layer-list__item-actions-menu,
+    #layerListDiv .esri-widget,
+    #layerListDiv .esri-widget__panel {
+      background: rgb(80, 80, 80) !important;
+      color: white !important;
+    }
+
+    #layerListDiv .esri-layer-list__item {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    #layerListDiv .esri-layer-list__item-title,
+    #layerListDiv .esri-layer-list__item-label {
+      color: white !important;
       font-size: 12px;
     }
 
-    #legendDiv .esri-legend__layer-caption {
-      font-size: 11px;
+    #layerListDiv .esri-layer-list__item-toggle,
+    #layerListDiv .esri-layer-list__item-toggle-icon {
+      color: #2196F3 !important;
+    }
+
+    #layerListDiv .esri-layer-list__item-toggle:hover {
+      color: #42A5F5 !important;
+    }
+
+    #layerListDiv .esri-icon-check-mark,
+    #layerListDiv .esri-icon-visible,
+    #layerListDiv .esri-icon-non-visible {
+      color: #2196F3 !important;
+    }
+
+    #layerListDiv .esri-layer-list__item-actions-menu-item {
+      background: rgb(80, 80, 80) !important;
+      color: white !important;
+    }
+
+    #layerListDiv .esri-layer-list__item-actions-menu-item:hover {
+      background: rgb(100, 100, 100) !important;
     }
 
     #timeSliderDiv {
@@ -181,7 +217,7 @@
         font-size: 12px;
       }
 
-      #legendLayerContainer {
+      #layerListContainer {
         top: auto;
         bottom: 110px;
         right: 10px;
@@ -249,9 +285,8 @@
 
 <div id="timeSliderDiv"></div>
 
-<div id="legendLayerContainer">
+<div id="layerListContainer">
   <div id="layerListDiv"></div>
-  <div id="legendDiv"></div>
 </div>
 
 <script>
@@ -260,7 +295,6 @@ require([
   "esri/Map",
   "esri/views/MapView",
   "esri/layers/GeoJSONLayer",
-  "esri/widgets/Legend",
   "esri/widgets/LayerList",
   "esri/widgets/TimeSlider"
 ], function(
@@ -268,7 +302,6 @@ require([
   Map,
   MapView, 
   GeoJSONLayer,
-  Legend,     
   LayerList, 
   TimeSlider
 ) {
@@ -473,21 +506,11 @@ require([
     console.error("Error del mapa:", error);
   });
 
-  const legend = new Legend({
-    view: view,
-    container: "legendDiv",
-    style: {
-      type: "card",
-      layout: "stack"
-    }
-  });
-
   const layerList = new LayerList({
     view: view,
     container: "layerListDiv",
     listItemCreatedFunction: (event) => {
       const item = event.item;
-      // Hacer la lista más compacta
       if (item.layer.type !== "group") {
         item.panel = {
           content: "legend",
@@ -551,46 +574,6 @@ require([
     }
   });
 
-  // Personalizar formato de fechas después de crear el widget
-  timeSlider.watch("timeExtent", () => {
-    customizeDateLabels();
-  });
-
-  view.whenLayerView(incendiosDia).then(() => {
-    customizeDateLabels();
-  });
-
-  function customizeDateLabels() {
-    setTimeout(() => {
-      const labels = document.querySelectorAll('.esri-time-slider__time-extent-date');
-      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
-                     'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      
-      labels.forEach(label => {
-        const text = label.textContent;
-        // Reemplazar formato de fecha si es necesario
-        const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (dateMatch) {
-          const [, mes, dia, año] = dateMatch;
-          const mesNombre = meses[parseInt(mes) - 1];
-          label.textContent = `${dia} ${mesNombre} ${año}`;
-        }
-      });
-
-      // También personalizar las etiquetas del eje
-      const axisLabels = document.querySelectorAll('.esri-time-slider__tick-label');
-      axisLabels.forEach(label => {
-        const text = label.textContent;
-        const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-        if (dateMatch) {
-          const [, mes, dia, año] = dateMatch;
-          const mesNombre = meses[parseInt(mes) - 1];
-          label.textContent = `${mesNombre} ${dia}`;
-        }
-      });
-    }, 100);
-  }
-
   // Control de intervalos de tiempo
   function setDailyMode() {
     timeSlider.stops = {
@@ -601,7 +584,6 @@ require([
     };
     timeSlider.playRate = 300;
     setActiveButton('timeControls', document.getElementById('dailyBtn'));
-    setTimeout(customizeDateLabels, 200);
   }
 
   function setMonthlyMode() {
@@ -613,7 +595,6 @@ require([
     };
     timeSlider.playRate = 800;
     setActiveButton('timeControls', document.getElementById('monthlyBtn'));
-    setTimeout(customizeDateLabels, 200);
   }
 
   document.getElementById("dailyBtn").onclick = setDailyMode;
