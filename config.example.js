@@ -1,3 +1,0 @@
-const CONFIG = {
-  API_KEY: "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiUvsl0sCw_J-blPUmRYeGlhSo38x1wfQYw-fJUh7o4GpuTEegg0pgyIXi8XOBMfRQk50idDStT_Ku_uJ1RkeOZL8SrQch_ZRX1KJP6B2usYO8uQevOnFm3vLExvmh7n-G4F8zdvaPIQ2yNTTbou0UWqBUAxarQc9l9iEJ2e_-5pk.AT1_srIXJxOu"  // Placeholder
-};
