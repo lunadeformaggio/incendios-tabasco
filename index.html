@@ -6,7 +6,6 @@
   <title>Incendios Tabasco</title>
 
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-  <script src="config.js"></script> 
   <script src="https://js.arcgis.com/4.29/"></script>
 
   <style>
@@ -264,11 +263,9 @@ require([
   TimeSlider
 ) {
 
-  // 🔑 IMPORTANTE: Esta API key debe moverse a un archivo config.js no trackeado en Git
-  // Crea un archivo config.js con: const CONFIG = { API_KEY: "tu_key_aqui" };
-  // Y añade config.js a tu .gitignore
- const API_KEY = CONFIG.API_KEY;
-  esriConfig.apiKey = API_KEY;
+ 
+ const API_KEY = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
+
 
   // Elementos del DOM
   const loadingDiv = document.getElementById("loadingDiv");
