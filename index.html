@@ -76,15 +76,25 @@
       z-index: 99;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-width: 300px;
+      gap: 8px;
+      max-width: 220px;
     }
 
     #legendDiv, #layerListDiv {
       background: white;
-      padding: 12px;
-      border-radius: 8px;
+      padding: 8px;
+      border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      font-size: 12px;
+    }
+
+    #legendDiv .esri-legend__service,
+    #layerListDiv .esri-layer-list {
+      font-size: 12px;
+    }
+
+    #legendDiv .esri-legend__layer-caption {
+      font-size: 11px;
     }
 
     #timeSliderDiv {
@@ -263,9 +273,6 @@ require([
   TimeSlider
 ) {
 
-  // 🔑 IMPORTANTE: Esta API key debe moverse a un archivo config.js no trackeado en Git
-  // Crea un archivo config.js con: const CONFIG = { API_KEY: "tu_key_aqui" };
-  // Y añade config.js a tu .gitignore
   const API_KEY = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
   esriConfig.apiKey = API_KEY;
 
@@ -410,7 +417,6 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/instalaciones.svg",
-        width: 16,
         height: 16
       }
     }
@@ -425,7 +431,6 @@ require([
       symbol: {
         type: "picture-marker",
         url: "./img/pozo.svg",
-        width: 16,
         height: 16
       }
     }
@@ -470,12 +475,26 @@ require([
 
   const legend = new Legend({
     view: view,
-    container: "legendDiv"
+    container: "legendDiv",
+    style: {
+      type: "card",
+      layout: "stack"
+    }
   });
 
   const layerList = new LayerList({
     view: view,
-    container: "layerListDiv"
+    container: "layerListDiv",
+    listItemCreatedFunction: (event) => {
+      const item = event.item;
+      // Hacer la lista más compacta
+      if (item.layer.type !== "group") {
+        item.panel = {
+          content: "legend",
+          open: false
+        };
+      }
+    }
   });
 
   // Control de modos de visualización
@@ -529,21 +548,48 @@ require([
     timeExtent: {
       start: new Date(2025, 0, 1),
       end: new Date(2025, 11, 31)
-    },
-    labelFormatFunction: (value, type, element, layout) => {
-      const fecha = new Date(value);
+    }
+  });
+
+  // Personalizar formato de fechas después de crear el widget
+  timeSlider.watch("timeExtent", () => {
+    customizeDateLabels();
+  });
+
+  view.whenLayerView(incendiosDia).then(() => {
+    customizeDateLabels();
+  });
+
+  function customizeDateLabels() {
+    setTimeout(() => {
+      const labels = document.querySelectorAll('.esri-time-slider__time-extent-date');
       const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
       
-      // Para etiquetas en el eje (layout === "wide")
-      if (layout === "wide" || layout === "compact") {
-        return `${meses[fecha.getMonth()]} ${fecha.getDate()}, ${fecha.getFullYear()}`;
-      }
-      
-      // Para la etiqueta del thumb (el indicador que se mueve)
-      return `${fecha.getDate()} ${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
-    }
-  });
+      labels.forEach(label => {
+        const text = label.textContent;
+        // Reemplazar formato de fecha si es necesario
+        const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (dateMatch) {
+          const [, mes, dia, año] = dateMatch;
+          const mesNombre = meses[parseInt(mes) - 1];
+          label.textContent = `${dia} ${mesNombre} ${año}`;
+        }
+      });
+
+      // También personalizar las etiquetas del eje
+      const axisLabels = document.querySelectorAll('.esri-time-slider__tick-label');
+      axisLabels.forEach(label => {
+        const text = label.textContent;
+        const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (dateMatch) {
+          const [, mes, dia, año] = dateMatch;
+          const mesNombre = meses[parseInt(mes) - 1];
+          label.textContent = `${mesNombre} ${dia}`;
+        }
+      });
+    }, 100);
+  }
 
   // Control de intervalos de tiempo
   function setDailyMode() {
@@ -555,6 +601,7 @@ require([
     };
     timeSlider.playRate = 300;
     setActiveButton('timeControls', document.getElementById('dailyBtn'));
+    setTimeout(customizeDateLabels, 200);
   }
 
   function setMonthlyMode() {
@@ -566,6 +613,7 @@ require([
     };
     timeSlider.playRate = 800;
     setActiveButton('timeControls', document.getElementById('monthlyBtn'));
+    setTimeout(customizeDateLabels, 200);
   }
 
   document.getElementById("dailyBtn").onclick = setDailyMode;
