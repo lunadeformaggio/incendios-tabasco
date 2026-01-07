@@ -71,7 +71,7 @@
 
     #legendLayerContainer {
       position: absolute;
-      bottom: 15px;
+      top: 15px;
       right: 15px;
       z-index: 99;
       display: flex;
@@ -172,8 +172,8 @@
       }
 
       #legendLayerContainer {
-        bottom: auto;
-        top: 10px;
+        top: auto;
+        bottom: 110px;
         right: 10px;
         max-width: 200px;
         font-size: 12px;
@@ -263,9 +263,11 @@ require([
   TimeSlider
 ) {
 
- 
- const API_KEY = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
-
+  // 🔑 IMPORTANTE: Esta API key debe moverse a un archivo config.js no trackeado en Git
+  // Crea un archivo config.js con: const CONFIG = { API_KEY: "tu_key_aqui" };
+  // Y añade config.js a tu .gitignore
+  const API_KEY = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
+  esriConfig.apiKey = API_KEY;
 
   // Elementos del DOM
   const loadingDiv = document.getElementById("loadingDiv");
@@ -298,7 +300,7 @@ require([
       symbol: {
         type: "simple-fill",
         color: [0,0,0,0],
-        outline: { color: "black", width: 2 }
+        outline: { color: "white", width: 1.5 }
       }
     }
   });
@@ -352,7 +354,7 @@ require([
       type: "simple",
       symbol: {
         type: "simple-marker",
-        color: "#070A91",
+        color: "#2196F3",
         size: "4px"
       }
     },
@@ -515,7 +517,7 @@ require([
 
   setAllMode();
 
-  // TimeSlider
+  // TimeSlider con formato de fechas en español
   const timeSlider = new TimeSlider({
     container: "timeSliderDiv",
     view: view,
@@ -527,6 +529,19 @@ require([
     timeExtent: {
       start: new Date(2025, 0, 1),
       end: new Date(2025, 11, 31)
+    },
+    labelFormatFunction: (value, type, element, layout) => {
+      const fecha = new Date(value);
+      const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                     'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      
+      // Para etiquetas en el eje (layout === "wide")
+      if (layout === "wide" || layout === "compact") {
+        return `${meses[fecha.getMonth()]} ${fecha.getDate()}, ${fecha.getFullYear()}`;
+      }
+      
+      // Para la etiqueta del thumb (el indicador que se mueve)
+      return `${fecha.getDate()} ${meses[fecha.getMonth()]} ${fecha.getFullYear()}`;
     }
   });
 
