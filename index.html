@@ -1,631 +1,430 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Incendios Tabasco</title>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Incendios en Tabasco</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.34/esri/themes/dark/main.css"/>
+     <script src="https://js.arcgis.com/4.34/"></script>
 
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css">
-  <script src="https://js.arcgis.com/4.29/"></script>
 
-  <style>
-    html, body, #viewDiv {
-      padding: 0;
-      margin: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    #timeControls {
-      position: absolute;
-      bottom: 105px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 99;
-      display: flex;
-      gap: 10px;
-      background: rgb(80, 80, 80);
-      padding: 8px 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
-
-    #modeControls {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      z-index: 99;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .control-btn {
-      padding: 8px 12px;
-      border: 2px solid transparent;
-      border-radius: 6px;
-      background: rgb(80, 80, 80);
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      transition: all 0.3s ease;
-      font-weight: 500;
-    }
-
-    .control-btn:hover {
-      background: rgb(100, 100, 100);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-    }
-
-    .control-btn:active {
-      transform: translateY(0);
-    }
-
-    .control-btn.active {
-      background: #2196F3;
-      color: white;
-      border-color: #1976D2;
-    }
-
-    #layerListContainer {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      z-index: 99;
-      max-width: 220px;
-    }
-
-    #layerListDiv {
-      background: rgb(80, 80, 80);
-      padding: 8px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-      font-size: 12px;
-    }
-
-    /* Personalizar el LayerList de Esri - FORZAR estilos */
-    #layerListDiv .esri-layer-list,
-    #layerListDiv .esri-layer-list__list,
-    #layerListDiv .esri-layer-list__item,
-    #layerListDiv .esri-layer-list__item-container,
-    #layerListDiv .esri-layer-list__child-toggle,
-    #layerListDiv .esri-layer-list__item-actions-menu,
-    #layerListDiv .esri-widget,
-    #layerListDiv .esri-widget__panel {
-      background: rgb(80, 80, 80) !important;
-      color: white !important;
-    }
-
-    #layerListDiv .esri-layer-list__item {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    #layerListDiv .esri-layer-list__item-title,
-    #layerListDiv .esri-layer-list__item-label {
-      color: white !important;
-      font-size: 12px;
-    }
-
-    #layerListDiv .esri-layer-list__item-toggle,
-    #layerListDiv .esri-layer-list__item-toggle-icon {
-      color: #2196F3 !important;
-    }
-
-    #layerListDiv .esri-layer-list__item-toggle:hover {
-      color: #42A5F5 !important;
-    }
-
-    #layerListDiv .esri-icon-check-mark,
-    #layerListDiv .esri-icon-visible,
-    #layerListDiv .esri-icon-non-visible {
-      color: #2196F3 !important;
-    }
-
-    #layerListDiv .esri-layer-list__item-actions-menu-item {
-      background: rgb(80, 80, 80) !important;
-      color: white !important;
-    }
-
-    #layerListDiv .esri-layer-list__item-actions-menu-item:hover {
-      background: rgb(100, 100, 100) !important;
-    }
-
-    #timeSliderDiv {
-      position: absolute;
-      bottom: 15px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 40px);
-      max-width: 800px;
-      height: 80px;
-      z-index: 99;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    }
-
-    #loadingDiv {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 100;
-      background: white;
-      padding: 20px 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      display: none;
-    }
-
-    #loadingDiv.show {
-      display: block;
-    }
-
-    .spinner {
-      border: 3px solid #f3f3f3;
-      border-top: 3px solid #0079c1;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 10px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    #errorDiv {
-      position: absolute;
-      top: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 100;
-      background: #ffebee;
-      color: #c62828;
-      padding: 12px 20px;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      display: none;
-      max-width: 80%;
-      border-left: 4px solid #c62828;
-    }
-
-    #errorDiv.show {
-      display: block;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      #timeControls {
-        bottom: 110px;
-        padding: 6px 10px;
-        gap: 5px;
+    
+    <style>
+      html,
+      body{
+        background-color: #202020;
+        color: #ffffff;
+      }
+      #MiMapa{
+        padding: 0;
+         margin: 0;
+          height: 100%;
+          width: 100%;
+          overflow: hidden;
       }
 
-      #modeControls {
-        left: 10px;
-        top: 10px;
-      }
 
-      .control-btn {
-        padding: 6px 10px;
-        font-size: 12px;
-      }
+     /*//////////////////////////////////////////*/
 
-      #layerListContainer {
-        top: auto;
-        bottom: 110px;
-        right: 10px;
-        max-width: 200px;
-        font-size: 12px;
-      }
-
-      #timeSliderDiv {
-        width: calc(100% - 20px);
-        height: 60px;
-      }
+    .esri-coordinate-conversion {
+      transform: scale(0.85);   /*cambiar tamaño */
+      backdrop-filter: blur(4px);
     }
 
-    @media (max-width: 480px) {
-      #modeControls {
-        flex-direction: row;
-        flex-wrap: wrap;
-        max-width: calc(100% - 20px);
-      }
 
-      .control-btn {
-        flex: 1 1 auto;
-        min-width: 100px;
-      }
+      
 
-      #timeControls {
-        width: auto;
-        max-width: calc(100% - 20px);
-      }
-    }
-  </style>
-</head>
+     
 
-<body>
+    </style>
 
-<div id="viewDiv"></div>
+     <body>
 
-<div id="loadingDiv">
-  <div class="spinner"></div>
-  <div>Cargando datos...</div>
-</div>
+    
 
-<div id="errorDiv"></div>
+     <div id="MiMapa"></div>
 
-<div id="timeControls">
-  <button id="dailyBtn" class="control-btn active" aria-label="Cambiar a vista diaria" title="Intervalo diario">
-    📅 Diario
-  </button>
-  <button id="monthlyBtn" class="control-btn" aria-label="Cambiar a vista mensual" title="Intervalo mensual">
-    📆 Mensual
-  </button>
-</div>
+    
+    <div id="timeSliderDiv" 
+    style="
+    position: absolute; 
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 50%; 
+    z-index: 99;"></div>
+     
 
-<div id="modeControls">
-  <button id="dayModeBtn" class="control-btn" aria-label="Mostrar solo incendios diurnos" title="Incendios detectados durante el día">
-    🌞 Incendios de día
-  </button>
-  <button id="nightModeBtn" class="control-btn" aria-label="Mostrar solo incendios nocturnos" title="Incendios detectados durante la noche">
-    🌙 Incendios de noche
-  </button>
-  <button id="allModeBtn" class="control-btn active" aria-label="Mostrar todos los incendios" title="Todos los incendios">
-    🔄 Todos los incendios
-  </button>
-</div>
+      
 
-<div id="timeSliderDiv"></div>
 
-<div id="layerListContainer">
-  <div id="layerListDiv"></div>
-</div>
 
-<script>
-require([
-  "esri/config",
-  "esri/Map",
-  "esri/views/MapView",
-  "esri/layers/GeoJSONLayer",
-  "esri/widgets/LayerList",
-  "esri/widgets/TimeSlider"
-], function(
-  esriConfig,
-  Map,
-  MapView, 
-  GeoJSONLayer,
-  LayerList, 
-  TimeSlider
-) {
 
-  const API_KEY = "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu";
-  esriConfig.apiKey = API_KEY;
 
-  // Elementos del DOM
-  const loadingDiv = document.getElementById("loadingDiv");
-  const errorDiv = document.getElementById("errorDiv");
+    <script>
+      require([
+      "esri/config",
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/GeoJSONLayer",
+      "esri/widgets/LayerList",
+      "esri/widgets/TimeSlider",
+      "esri/widgets/CoordinateConversion",
+      "esri/widgets/ScaleBar",
+      "esri/widgets/Home"
+      ], function(  //funciones en el mismo orden
+        esriConfig,
+        Map,
+        MapView,
+        GeoJSONLayer,
+        LayerList,
+        TimeSlider,
+        CoordinateConversion,
+        ScaleBar,
+        Home
+        ) {
 
-  // Funciones de utilidad
-  function showLoading(show) {
-    loadingDiv.classList.toggle("show", show);
-  }
-
-  function showError(message) {
-    errorDiv.textContent = message;
-    errorDiv.classList.add("show");
-    setTimeout(() => errorDiv.classList.remove("show"), 5000);
-  }
-
-  function handleLayerError(error, layerName) {
-    console.error(`Error cargando ${layerName}:`, error);
-    showError(`No se pudo cargar: ${layerName}`);
-  }
-
-  showLoading(true);
-
-  // Definición de capas con manejo de errores
-  const limite = new GeoJSONLayer({
-    url: "./data/Limite_Tabasco.geojson",
-    title: "Límite estatal",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-fill",
-        color: [0,0,0,0],
-        outline: { color: "white", width: 1.5 }
-      }
-    }
-  });
-
-  const incendiosDia = new GeoJSONLayer({
-    url: "./data/Incendios_Vegetacion_Dia.geojson",
-    title: "Incendios en vegetación (día)",
-    timeInfo: {
-      startField: "ACQ_DATE"
-    },
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-marker",
-        color: "#ff7043",
-        size: "4px"
-      }
-    },
-    featureReduction: {
-      type: "cluster",
-      clusterRadius: "50px",
-      clusterMinSize: "16px",
-      clusterMaxSize: "32px",
-      symbol: {
-        type: "simple-marker",
-        color: "#ff7043",
-        outline: null
-      },
-      labelingInfo: [{
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "Text($feature.cluster_count, '#,###')"
-        },
-        symbol: {
-          type: "text",
-          color: "white",
-          font: { size: 10, weight: "bold" }
-        },
-        labelPlacement: "center-center"
-      }]
-    }
-  });
-
-  const incendiosNoche = new GeoJSONLayer({
-    url: "./data/Incendios_Vegetacion_Noche.geojson",
-    title: "Incendios en vegetación (noche)",
-    timeInfo: {
-      startField: "ACQ_DATE"
-    },
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-marker",
-        color: "#2196F3",
-        size: "4px"
-      }
-    },
-    featureReduction: {
-      type: "cluster",
-      clusterRadius: "50px",
-      clusterMinSize: "16px",
-      clusterMaxSize: "32px",
-      symbol: {
-        type: "simple-marker",
-        color: "#2196F3",
-        outline: null
-      },
-      labelingInfo: [{
-        deconflictionStrategy: "none",
-        labelExpressionInfo: {
-          expression: "Text($feature.cluster_count, '#,###')"
-        },
-        symbol: {
-          type: "text",
-          color: "white",
-          font: { size: 10, weight: "bold" }
-        },
-        labelPlacement: "center-center"
-      }]
-    }
-  });
-
-  const mecheros = new GeoJSONLayer({
-    url: "./data/Fuentes_Fijas_SUOMI.geojson",
-    title: "Incendios de fuentes fijas",
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "simple-marker",
-        style: "square",
-        color: "#d32f2f",
-        size: "6px",
-        outline: {
-          color: "#d32f2f",
-          width: 0.5
-        }
-      }
-    }
-  });
-
-  const instalaciones = new GeoJSONLayer({
-    url: "./data/Instalaciones_petroleras.geojson",
-    title: "Instalaciones petroleras de PEMEX",
-    minScale: 500000,
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "picture-marker",
-        url: "./img/instalaciones.svg",
-        height: 16
-      }
-    }
-  });
-
-  const pozos = new GeoJSONLayer({
-    url: "./data/Pozos_PEMEX.geojson",
-    title: "Pozos petroleros PEMEX",
-    minScale: 500000,
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "picture-marker",
-        url: "./img/pozo.svg",
-        height: 16
-      }
-    }
-  });
-
-  // Manejo de errores de carga para cada capa
-  const layers = [
-    { layer: limite, name: "Límite estatal" },
-    { layer: instalaciones, name: "Instalaciones petroleras" },
-    { layer: pozos, name: "Pozos petroleros" },
-    { layer: mecheros, name: "Fuentes fijas" },
-    { layer: incendiosNoche, name: "Incendios nocturnos" },
-    { layer: incendiosDia, name: "Incendios diurnos" }
-  ];
-
-  layers.forEach(({ layer, name }) => {
-    layer.when(
-      () => console.log(`✓ ${name} cargado correctamente`),
-      (error) => handleLayerError(error, name)
-    );
-  });
-
-  const map = new Map({
-    basemap: "satellite",
-    layers: layers.map(l => l.layer)
-  });
-
-  const view = new MapView({
-    container: "viewDiv",
-    map: map,
-    center: [-92.9, 18.0],
-    zoom: 9
-  });
-
-  view.when(() => {
-    showLoading(false);
-  }, (error) => {
-    showLoading(false);
-    showError("Error al inicializar el mapa");
-    console.error("Error del mapa:", error);
-  });
-
-  const layerList = new LayerList({
-    view: view,
-    container: "layerListDiv",
-    listItemCreatedFunction: (event) => {
-      const item = event.item;
-      if (item.layer.type !== "group") {
-        item.panel = {
-          content: "legend",
-          open: false
+        //API Key
+        var esriConfig = {
+            apiKey: "AAPTxy8BH1VEsoebNVZXo8HurBDOriv4mI9YGxT5IfEksbK95gl730cHPIkSo0fHkbtiLxNi9vPbFdo0NzbsKqrJCSBjSJx-l6fJD7QEFdWcxfwimxTdKJMmiipAN3PVSoaxA5DAYChZTGY0_iB8XtMGer3DdUSLQgWRaVWKCg4Q8VM4WN6womaxA-ckbljDYpgkNzK9GqTJfSEQ_A0iEigoM_AB2XfJ9E-Iyq_7RAeb8LM.AT1_srIXJxOu",
         };
-      }
-    }
-  });
 
-  // Control de modos de visualización
-  let currentMode = 'all';
-  
-  function setActiveButton(buttonGroup, activeButton) {
-    const buttons = document.querySelectorAll(`#${buttonGroup} .control-btn`);
-    buttons.forEach(btn => btn.classList.remove('active'));
-    activeButton.classList.add('active');
-  }
+        
+      
+        //declaración de variables
+        const map = new Map({   //objeto mapa
+          basemap: "satellite"
+       });
 
-  function setDayMode() {
-    incendiosDia.visible = true;
-    incendiosNoche.visible = false;
-    map.basemap = "topo-vector";
-    currentMode = 'day';
-    setActiveButton('modeControls', document.getElementById('dayModeBtn'));
-  }
+        const view = new MapView({   //objeto vista
+          container: "MiMapa", //ID del div
+          map: map,
+          center: [-92.9, 18.0], //longitud, latitud
+          zoom: 9
+        });
 
-  function setNightMode() {
-    incendiosDia.visible = false;
-    incendiosNoche.visible = true;
-    map.basemap = "dark-gray-vector";
-    currentMode = 'night';
-    setActiveButton('modeControls', document.getElementById('nightModeBtn'));
-  }
+        
+      
 
-  function setAllMode() {
-    incendiosDia.visible = true;
-    incendiosNoche.visible = true;
-    map.basemap = "satellite";
-    currentMode = 'all';
-    setActiveButton('modeControls', document.getElementById('allModeBtn'));
-  }
 
-  document.getElementById("dayModeBtn").onclick = setDayMode;
-  document.getElementById("nightModeBtn").onclick = setNightMode;
-  document.getElementById("allModeBtn").onclick = setAllMode;
+        ////////////// CAPAS //////////////
 
-  setAllMode();
 
-  // TimeSlider con formato de fechas en español
-  const timeSlider = new TimeSlider({
-    container: "timeSliderDiv",
-    view: view,
-    mode: "time-window",
-    fullTimeExtent: {
-      start: new Date(2025, 0, 1),
-      end: new Date(2025, 11, 31)
-    },
-    timeExtent: {
-      start: new Date(2025, 0, 1),
-      end: new Date(2025, 11, 31)
-    }
-  });
+        //capa de límite de Tabasco
 
-  // Control de intervalos de tiempo
-  function setDailyMode() {
-    timeSlider.stops = {
-      interval: {
-        value: 1,
-        unit: "days"
-      }
-    };
-    timeSlider.playRate = 300;
-    setActiveButton('timeControls', document.getElementById('dailyBtn'));
-  }
+        const limite = new GeoJSONLayer({  
+          url: "./data/Limite_Tabasco.geojson",
+          title: "División Política de Tabasco",
+          renderer: {
+          type: "simple",
+          symbol: {
+          type: "simple-fill",
+          color: [0,0,0,0],
+          outline: { color: "white", width: 1.5 }
+          }
+          },
+        });
 
-  function setMonthlyMode() {
-    timeSlider.stops = {
-      interval: {
-        value: 1,
-        unit: "months"
-      }
-    };
-    timeSlider.playRate = 800;
-    setActiveButton('timeControls', document.getElementById('monthlyBtn'));
-  }
+        //capa de incendios de día
 
-  document.getElementById("dailyBtn").onclick = setDailyMode;
-  document.getElementById("monthlyBtn").onclick = setMonthlyMode;
+        const incendiosDia = new GeoJSONLayer({  
+          url: "./data/Incendios_Vegetacion_Dia.geojson",
+          title: "Incendios durante el día",
+          timeInfo: {
+            startField: "DATE_MX",   //campo de fecha para el time slider
+             interval: {
+              unit: "days",
+              value: 1
+            }
+            },
+          popupTemplate: {
+            title: "Incendios durante el día",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "LATITUDE",
+                    label: "Latitud"
+                  },
+                  {
+                    fieldName: "LONGITUDE",
+                    label: "Longitud"
+                  },
+                  {
+                    fieldName: "BRIGHTNESS",
+                    label: "Temperatura de brillo (K)"
+                  },
+                  {
+                    fieldName: "BRIGHT_T31",
+                    label: "Temperatura del canal térmico T31"
+                  },
+                  {
+                    fieldName: "DATE_MX",
+                    label: "Fecha de detección (UTC-6)",
+                    format: {                     //cambiar formato de fecha
+                      dateFormat: "short-date"
+                    }
+                  },
+                  {
+                    fieldName: "HORA_MX",
+                    label: "Hora de adquisición (UTC-6)",
+                    format: {                     //cambiar formato de hora
+                      timeFormat: "short-time"
+                    }
+                  },
+                  {
+                    fieldName: "SATELLITE",
+                    label: "Satélite"
+                  },
+                  {
+                    fieldName: "INSTRUMENT",
+                    label: "Sensor"
+                  },
+                  {
+                    fieldName: "FRP",
+                    label: "Potencia radiante (MW)"
+                  },
+                  {
+                    fieldName: "DAYNIGHT",
+                    label: "Detección de día o noche"
+                  },
+                    {
+                    fieldName: "SCAN",
+                    label: "Tamaño del pixel en dirección de escaneo (m)"
+                  },
+                  {
+                    fieldName: "TRACK",
+                    label: "Tamaño del pixel en dirección de trayectoria (m)"
+                  }
+                ],
+              }
+            ]
+          },
+          renderer: {
+          type: "simple",
+          symbol: {
+          type: "simple-marker",
+          color: "#B2ACF2",
+          outline: null,
+          size: 6,
+          }
+          },
+          featureReduction: {   //Configuración de agrupamiento de puntos
+            type: "cluster", 
+            clusterRadius: "50px",
+            clusterMinSize: "16px",
+            clusterMaxSize: "32px",
+            symbol: {
+            type: "simple-marker",
+            color: "#B2ACF2",
+            outline: null
+          },
+            labelingInfo: [{
+            deconflictionStrategy: "none",
+            labelExpressionInfo: {
+            expression: "Text($feature.cluster_count, '#,###')"
+          },
+            symbol: {
+              type: "text",
+             color: "white",
+             font: { size: 10, weight: "bold" }
+             },
+           labelPlacement: "center-center"
+            }]
+           }
+          });
 
-  setDailyMode();
+        //capa de incendios de noche
 
-  // Atajos de teclado para accesibilidad
-  document.addEventListener('keydown', (e) => {
-    if (e.altKey) {
-      switch(e.key) {
-        case '1':
-          setDayMode();
-          break;
-        case '2':
-          setNightMode();
-          break;
-        case '3':
-          setAllMode();
-          break;
-        case 'd':
-          setDailyMode();
-          break;
-        case 'm':
-          setMonthlyMode();
-          break;
-      }
-    }
-  });
-});
-</script>
+        const incendiosNoche = new GeoJSONLayer({  
+          url: "./data/Incendios_Vegetacion_Noche.geojson",
+          title: "Incendios durante la noche",
+          timeInfo: {
+            startField: "DATE_MX",   //campo de fecha para el time slider
+            interval: {
+              unit: "days",
+              value: 1
+             }
+             },
+          popupTemplate: {
+            title: "Incendios durante la noche",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "LATITUDE",
+                    label: "Latitud"
+                  },
+                  {
+                    fieldName: "LONGITUDE",
+                    label: "Longitud"
+                  },
+                  {
+                    fieldName: "BRIGHTNESS",
+                    label: "Temperatura de brillo (K)"
+                  },
+                  {
+                    fieldName: "BRIGHT_T31",
+                    label: "Temperatura del canal térmico T31"
+                  },
+                  {
+                    fieldName: "DATE_MX",
+                    label: "Fecha de detección (UTC-6)",
+                    format: {                     //cambiar formato de fecha
+                      dateFormat: "short-date"
+                    }
+                  },
+                  {
+                    fieldName: "HORA_MX",
+                    label: "Hora de adquisición (UTC-6)",
+                    format: {                     //cambiar formato de hora
+                      timeFormat: "short-time"
+                    }
+                  },
+                  {
+                    fieldName: "SATELLITE",
+                    label: "Satélite"
+                  },
+                  {
+                    fieldName: "INSTRUMENT",
+                    label: "Sensor"
+                  },
+                  {
+                    fieldName: "FRP",
+                    label: "Potencia radiante (MW)"
+                  },
+                  {
+                    fieldName: "DAYNIGHT",
+                    label: "Detección de día o noche"
+                  },
+                    {
+                    fieldName: "SCAN",
+                    label: "Tamaño del pixel en dirección de escaneo (m)"
+                  },
+                  {
+                    fieldName: "TRACK",
+                    label: "Tamaño del pixel en dirección de trayectoria (m)"
+                  }
+                ],
+              }
+            ]
+          },
+          renderer: {
+          type: "simple",
+          symbol: {
+          type: "simple-marker",
+          color: "#F2B9AC",
+          outline: null,
+          size: 4,
+          }
+          },
+          featureReduction: {   //Configuración de agrupamiento de puntos
+            type: "cluster", 
+            clusterRadius: "50px",
+            clusterMinSize: "16px",
+            clusterMaxSize: "32px",
+            symbol: {
+            type: "simple-marker",
+            color: "#F2B9AC",
+            outline: null
+          },
+            labelingInfo: [{
+            deconflictionStrategy: "none",
+            labelExpressionInfo: {
+            expression: "Text($feature.cluster_count, '#,###')"
+          },
+            symbol: {
+              type: "text",
+             color: "white",
+             font: { size: 10, weight: "bold" }
+             },
+           labelPlacement: "center-center"
+            }]
+           }
+          });
 
-</body>
+       //Agregar capas al mapa
+        map.add(limite);  
+        map.add(incendiosDia);
+        map.add(incendiosNoche);  
+
+
+
+        ////////////// WIDGETS //////////////
+
+        //Agregar Layer List
+        const layerList = new LayerList({
+          view: view,
+          icon: "layers"
+        });
+
+        //Agregar Scale Bar
+        const scaleBar = new ScaleBar({
+          view: view,
+          barStyle: "line",
+          unit: "metric",
+          width: 136
+        });
+
+        //Agregar Coordinate Conversion
+        const ccWidget = new CoordinateConversion({
+          view: view,
+          orientation: "auto"
+        });
+
+        //Agregar time slider
+        const timeSlider = new TimeSlider({
+          view: view,
+          container: "timeSliderDiv",  //Declarar en Div externo
+          mode: "time-window",
+          timevisible: true,
+          playRate: 500,
+          fullTimeExtent: {
+            start: new Date(2025, 0, 1),
+            end: new Date(2025, 11, 31)
+          },
+          stops: {
+            interval: {
+              value: 1,
+              unit: "days"
+            }
+          },
+        });
+
+        //Inicializar time extent al cargar la vista
+        timeSlider.timeExtent = {
+          start: new Date(2025, 0, 1),
+          end: new Date(2025, 11, 31)
+        };
+
+        
+
+
+        //Agregar widgets al view
+       
+        view.ui.add(layerList, {
+          position: "top-right"
+        });
+        view.ui.add(scaleBar, {
+          position: "bottom-left"
+        });
+        view.ui.add(ccWidget, {
+          position: "bottom-right"
+        });
+        view.ui.add(new timeSlider, {
+          position: "bottom-center"
+        });
+        
+
+
+    });
+    </script>
+  </head>
+
+ 
+
+
+  </body>  
 </html>
+
+  
